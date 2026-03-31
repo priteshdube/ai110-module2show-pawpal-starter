@@ -4,8 +4,17 @@
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
+- Briefly describe your initial UML design. 
 - What classes did you include, and what responsibilities did you assign to each?
+
+The PawPal system includes four core classes:
+
+Four core classes:
+
+Owner - Tracks availability and preferences
+Pet - Stores pet information and special needs
+Task - Represents care tasks with duration, priority, and frequency
+Scheduler - Orchestrates Owner, Pet, and Tasks to generate daily schedules
 
 **b. Design changes**
 
