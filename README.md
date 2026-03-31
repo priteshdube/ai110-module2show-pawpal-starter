@@ -2,6 +2,28 @@
 
 You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
 
+## 📸 Demo
+
+<!-- Replace app_screenshot.png with your actual screenshot filename -->
+![PawPal+ Streamlit App](app_screenshot.png)
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| **Chronological sorting** | `sort_by_time()` orders all tasks by their `HH:MM` start time using a lambda key, so the task list always reflects the real order of the day |
+| **Conflict detection** | `detect_conflicts()` runs an O(n²) interval-overlap scan across all pending tasks and surfaces a plain-English warning for every pair that overlaps, without raising exceptions |
+| **Daily recurrence** | `complete_task()` marks a task done, archives it to history, and auto-creates the next occurrence using `timedelta(days=1)` — so recurring care never falls off the schedule |
+| **Weekly recurrence** | Same recurrence engine supports `"weekly"` frequency via `timedelta(weeks=1)`; weekly tasks only appear on Mondays via `needs_today(day_number)` |
+| **Priority-based scheduling** | `generate_schedule()` fills the day greedily — highest priority first — and stops when the owner's time budget is exhausted, guaranteeing the plan always fits |
+| **Schedule reasoning** | `explain_schedule()` returns a plain-English sentence for every task: chosen (priority + time remaining) or skipped (budget exceeded) |
+| **Completion tracking** | `get_completion_rate()` returns the percentage of tasks finished, and completed tasks are archived to `_history` for audit |
+| **Task filtering** | `filter_tasks(completed, pet_name)` returns tasks matching a completion status, a specific pet, or both combined |
+| **Multi-pet support** | Multiple pets can be registered; tasks link to individual pets and are filtered or reported per pet |
+| **Caching** | Priority-sort and total-duration results are cached and automatically invalidated whenever tasks change |
+
 ## Scenario
 
 A busy pet owner needs help staying consistent with pet care. They want an assistant that can:
