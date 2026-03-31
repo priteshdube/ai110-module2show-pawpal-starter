@@ -1,0 +1,42 @@
+classDiagram
+    class Owner {
+        -string name
+        -float available_hours_per_day
+        -dict preferences
+        +get_available_time() float
+        +set_preferences(dict) void
+    }
+
+    class Pet {
+        -string name
+        -string species
+        -int age
+        -string breed
+        -string special_needs
+        +get_info() dict
+        +update_info(dict) void
+    }
+
+    class Task {
+        -string name
+        -int duration
+        -int priority
+        -string frequency
+        +is_high_priority() bool
+        +get_duration() int
+        +needs_today() bool
+    }
+
+    class Scheduler {
+        -Owner owner
+        -Pet pet
+        -list tasks
+        +generate_schedule() list
+        +rank_tasks_by_priority() list
+        +fit_tasks_in_time(list) bool
+    }
+
+    Owner "1" -- "1" Pet : owns
+    Scheduler "1" -- "1" Owner : manages
+    Scheduler "1" -- "1" Pet : schedules_for
+    Scheduler "1" -- "*" Task : manages

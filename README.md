@@ -5,7 +5,7 @@ You are building **PawPal+**, a Streamlit app that helps a pet owner plan care t
 ## 📸 Demo
 
 <!-- Replace app_screenshot.png with your actual screenshot filename -->
-![PawPal+ Streamlit App](app_screenshot.png)
+![PawPal+ Streamlit App](![alt text](image.png))
 
 ---
 
