@@ -37,6 +37,33 @@ The scheduler goes beyond a simple sorted list with several algorithmic improvem
 - **Recurring tasks** — `complete_task()` marks a task done, archives it to history, and auto-creates the next occurrence using `timedelta` (`+1 day` for daily, `+7 days` for weekly).
 - **Conflict detection** — `detect_conflicts()` scans all task pairs for overlapping time intervals and returns warning strings without ever raising an exception.
 
+## Testing PawPal+
+
+### Run the test suite
+
+```bash
+python -m pytest tests/test_pawpal.py -v
+```
+
+### What the tests cover
+
+| Test | What it verifies |
+|------|-----------------|
+| `test_mark_complete_changes_status` | A task starts as incomplete and flips to completed after `mark_completed()` |
+| `test_add_task_increases_pet_task_count` | Each `add_task()` call grows the scheduler's task list by one |
+| `test_sort_by_time_returns_chronological_order` | `sort_by_time()` returns tasks in ascending `HH:MM` order regardless of insertion order |
+| `test_complete_daily_task_creates_next_day_task` | Completing a `"daily"` task removes it, archives it, and auto-creates an identical task due the following day |
+| `test_detect_conflicts_flags_overlapping_times` | `detect_conflicts()` returns at least one warning when two tasks share the same start time |
+| `test_no_conflict_for_sequential_tasks` | Back-to-back tasks (one ends exactly when the next begins) produce no conflict warnings |
+
+### Confidence Level
+
+**4 / 5 stars**
+
+The core scheduling behaviors — sorting, recurrence, and conflict detection — are fully covered and all 6 tests pass. One star is withheld because edge cases such as tasks that span midnight, tasks with no assigned time, and UI-layer integration with Streamlit remain untested.
+
+---
+
 ## Getting started
 
 ### Setup
