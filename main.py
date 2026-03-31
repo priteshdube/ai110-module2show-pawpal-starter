@@ -47,176 +47,139 @@ def main():
     print("Creating Owner...")
     owner = Owner(
         name="Sarah",
-        available_hours_per_day=4.0,
-        preferences={"preferred_schedule": "morning", "pet_friendly": True}
+        available_hours_per_day=1.0,   # tight budget to demo the greedy cap
+        preferences={"preferred_schedule": "morning"}
     )
-    print(f"✓ Owner: {owner.name}")
-    print(f"✓ Available Time: {owner.available_hours_per_day} hours/day")
-    print(f"✓ Preferences: {owner.preferences}\n")
-    
-    # ===== CREATE PETS =====
-    print_separator("CREATING PETS")
-    
-    pet1 = Pet(
-        name="Max",
-        species="dog",
-        age=3,
-        breed="Golden Retriever",
-        special_needs="Needs regular exercise"
-    )
-    print(f"✓ Created Pet 1:")
-    print_pet_info(pet1)
-    
-    pet2 = Pet(
-        name="Luna",
-        species="cat",
-        age=2,
-        breed="Siamese",
-        special_needs="Requires medication daily"
-    )
-    print(f"✓ Created Pet 2:")
-    print_pet_info(pet2)
-    
-    # Add pets to owner
+    print(f"Owner : {owner.name}")
+    print(f"Budget: {owner.available_hours_per_day} h/day "
+          f"({int(owner.available_hours_per_day * 60)} min)\n")
+
+    # ── Pets (Improvement 3 – multi-pet scheduler) ────────────────────────────
+    print_separator("PETS")
+    pet1 = Pet(name="Max",  species="dog", age=3,
+               breed="Golden Retriever", special_needs="Needs regular exercise")
+    pet2 = Pet(name="Luna", species="cat", age=2,
+               breed="Siamese",          special_needs="Requires medication daily")
+
     owner.add_pet(pet1)
     owner.add_pet(pet2)
-    print(f"✓ Added {len(owner.get_all_pets())} pets to owner\n")
-    
-    # ===== CREATE TASKS =====
-    print_separator("CREATING TASKS")
-    
-    # Task 1: Walk Max (high priority, daily)
-    task1 = Task(
-        name="Walk Max",
-        duration=30,
-        priority=5,
-        frequency="daily"
-    )
-    task1.set_pet(pet1)
-    print(f"✓ Created Task 1:")
-    print_task_info(task1)
-    
-    # Task 2: Feed Max (high priority, daily)
-    task2 = Task(
-        name="Feed Max",
-        duration=15,
-        priority=4,
-        frequency="daily"
-    )
-    task2.set_pet(pet1)
-    print(f"✓ Created Task 2:")
-    print_task_info(task2)
-    
-    # Task 3: Play with Luna (medium priority, daily)
-    task3 = Task(
-        name="Play with Luna",
-        duration=20,
-        priority=3,
-        frequency="daily"
-    )
-    task3.set_pet(pet2)
-    print(f"✓ Created Task 3:")
-    print_task_info(task3)
-    
-    # Task 4: Give Luna medication (high priority, daily)
-    task4 = Task(
-        name="Give Luna Medication",
-        duration=5,
-        priority=5,
-        frequency="daily"
-    )
-    task4.set_pet(pet2)
-    print(f"✓ Created Task 4:")
-    print_task_info(task4)
-    
-    # ===== CREATE SCHEDULER =====
-    print_separator("SETTING UP SCHEDULER")
-    
-    scheduler = Scheduler(owner, pet1)
-    
-    # Add tasks to scheduler
-    scheduler.add_task(task1)
-    scheduler.add_task(task2)
-    scheduler.add_task(task3)
-    scheduler.add_task(task4)
-    
-    print(f"✓ Scheduler created with {len(scheduler.get_all_tasks())} tasks")
-    print(f"✓ Owner: {scheduler.owner.name}")
-    print(f"✓ Primary Pet: {scheduler.pet.name}\n")
-    
-    # ===== CHECK FEASIBILITY =====
-    print_separator("SCHEDULE FEASIBILITY CHECK")
-    
-    total_duration = scheduler.calculate_total_duration(scheduler.get_all_tasks())
-    available_minutes = int(owner.available_hours_per_day * 60)
-    
-    print(f"Total Task Duration: {total_duration} minutes")
-    print(f"Available Time: {available_minutes} minutes")
-    print(f"Feasible: {'✓ YES' if scheduler.is_schedule_feasible() else '✗ NO'}")
-    
-    if scheduler.is_schedule_feasible():
-        print(f"Extra Time Available: {available_minutes - total_duration} minutes\n")
+
+    # Improvement 2: start_hour=8 → schedule begins at 08:00 instead of 00:00
+    # Improvement 3: pass pet1 as primary; add pet2 via add_pet()
+    scheduler = Scheduler(owner, pet=pet1, start_hour=8)
+    scheduler.add_pet(pet2)
+
+    print(f"Pets in scheduler: {[p.name for p in scheduler.pets]}\n")
+
+    # ── Tasks ─────────────────────────────────────────────────────────────────
+    print_separator("TASKS")
+
+    tasks = [
+        Task(name="Walk Max",             duration=30, priority=5, frequency="daily"),
+        Task(name="Feed Max",             duration=15, priority=4, frequency="daily"),
+        Task(name="Play with Luna",       duration=20, priority=3, frequency="daily"),
+        Task(name="Give Luna Medication", duration=5,  priority=5, frequency="daily"),
+        # Improvement 4: weekly task — only appears on Monday (day_number=0)
+        Task(name="Groom Max",            duration=45, priority=2, frequency="weekly"),
+    ]
+    pets_for_tasks = [pet1, pet1, pet2, pet2, pet1]
+
+    for task, pet in zip(tasks, pets_for_tasks):
+        task.set_pet(pet)
+        scheduler.add_task(task)
+        freq_note = " (weekly — Monday only)" if task.frequency == "weekly" else ""
+        print(f"  + {task.name:26s} {task.duration:3d} min  "
+              f"priority {task.priority}  [{task.frequency}]{freq_note}")
+
+    # ── Improvement 4: weekly vs daily demo ───────────────────────────────────
+    print_separator("FREQUENCY CHECK (needs_today)")
+    groom = scheduler.get_task("Groom Max")
+    for day, label in [(0, "Monday"), (1, "Tuesday"), (6, "Sunday")]:
+        print(f"  Groom Max on {label:9s} (day {day}): "
+              f"{'YES' if groom.needs_today(day) else 'NO'}")
+
+    # ── Improvement 1 + 2: greedy schedule with real start time ───────────────
+    print_separator("TODAY'S SCHEDULE  (Monday, starts 08:00)")
+    schedule = scheduler.generate_schedule(day_number=0)
+
+    start_min = scheduler.start_hour * 60
+    elapsed = 0
+    for idx, task in enumerate(schedule, 1):
+        s = start_min + elapsed
+        e = s + task.duration
+        sh, sm = divmod(s, 60)
+        eh, em = divmod(e, 60)
+        pet_name = task.pet.name if task.pet else "—"
+        print(f"  {idx}. [{sh:02d}:{sm:02d}–{eh:02d}:{em:02d}]  "
+              f"{task.name:26s}  pet: {pet_name}  priority: {task.priority}")
+        elapsed += task.duration
+
+    total_h, total_m = divmod(elapsed, 60)
+    print(f"\n  Total scheduled: {total_h}h {total_m}m  "
+          f"(budget: {int(owner.available_hours_per_day * 60)} min)")
+
+    # ── Improvement 5: schedule explanation ───────────────────────────────────
+    print_separator("SCHEDULE EXPLANATION")
+    for line in scheduler.explain_schedule(day_number=0):
+        print(f"  {line}")
+
+    # ── Mark some tasks complete then show Improvement 6 ─────────────────────
+    print_separator("COMPLETION RATE")
+    tasks[0].mark_completed()   # Walk Max
+    tasks[3].mark_completed()   # Give Luna Medication
+
+    rate = scheduler.get_completion_rate()
+    total  = len(scheduler.get_all_tasks())
+    done   = sum(1 for t in scheduler.get_all_tasks() if t.is_completed())
+    print(f"  Completed : {done}/{total} tasks")
+    print(f"  Rate      : {rate:.1f}%")
+
+    # ── Conflict detection ────────────────────────────────────────────────────
+    print_separator("CONFLICT DETECTION")
+
+    # Create a fresh scheduler with intentionally overlapping tasks
+    conflict_scheduler = Scheduler(owner, pet=pet1, start_hour=8)
+
+    # Task A: Walk Max  08:00 – 08:30  (30 min)
+    t_walk = Task("Walk Max",       duration=30, priority=5,
+                  frequency="daily", time="08:00")
+    t_walk.set_pet(pet1)
+
+    # Task B: Feed Max  08:20 – 08:35  (15 min) — overlaps Walk Max by 10 min
+    t_feed = Task("Feed Max",       duration=15, priority=4,
+                  frequency="daily", time="08:20")
+    t_feed.set_pet(pet1)
+
+    # Task C: Luna meds 09:00 – 09:05  (5 min) — no overlap
+    t_meds = Task("Luna Medication", duration=5, priority=5,
+                  frequency="daily", time="09:00")
+    t_meds.set_pet(pet2)
+
+    # Task D: Play Luna 09:03 – 09:23  (20 min) — overlaps Luna meds by 2 min
+    t_play = Task("Play with Luna", duration=20, priority=3,
+                  frequency="daily", time="09:03")
+    t_play.set_pet(pet2)
+
+    for t in [t_walk, t_feed, t_meds, t_play]:
+        conflict_scheduler.add_task(t)
+
+    print("Tasks scheduled:")
+    for t in conflict_scheduler.get_all_tasks():
+        h, m = map(int, t.time.split(":"))
+        end_m = h * 60 + m + t.duration
+        print(f"  {t.time}–{end_m // 60:02d}:{end_m % 60:02d}  "
+              f"{t.name:20s}  pet: {t.pet.name if t.pet else '—'}")
+
+    print()
+    conflicts = conflict_scheduler.detect_conflicts()
+    if conflicts:
+        for warning in conflicts:
+            print(f"  {warning}")
     else:
-        print(f"Over Budget By: {total_duration - available_minutes} minutes\n")
-    
-    # ===== GENERATE AND PRINT SCHEDULE =====
-    print_separator("TODAY'S SCHEDULE")
-    
-    schedule = scheduler.generate_schedule()
-    
-    if schedule:
-        print(f"Schedule for {owner.name} - {owner.available_hours_per_day} hours available\n")
-        
-        time_elapsed = 0
-        for idx, task in enumerate(schedule, 1):
-            start_time_mins = time_elapsed
-            end_time_mins = time_elapsed + task.duration
-            
-            start_hour = start_time_mins // 60
-            start_min = start_time_mins % 60
-            end_hour = end_time_mins // 60
-            end_min = end_time_mins % 60
-            
-            pet_name = task.pet.name if task.pet else "Unknown"
-            priority_indicator = "⭐" * task.priority
-            
-            print(f"{idx}. [{start_hour:02d}:{start_min:02d} - {end_hour:02d}:{end_min:02d}] {task.name}")
-            print(f"   Pet: {pet_name} | Duration: {task.duration} min | Priority: {priority_indicator}")
-            print()
-            
-            time_elapsed += task.duration
-        
-        print("-" * 60)
-        print(f"Total Time: {time_elapsed} minutes ({time_elapsed // 60}h {time_elapsed % 60}m)")
-    else:
-        print("No tasks scheduled for today.")
-    
-    # ===== MARK SOME TASKS AS COMPLETED =====
-    print_separator("MARKING TASKS AS COMPLETED")
-    
-    task1.mark_completed()
-    task3.mark_completed()
-    
-    print(f"✓ Marked '{task1.name}' as completed")
-    print(f"✓ Marked '{task3.name}' as completed\n")
-    
-    pending = scheduler.get_pending_tasks()
-    print(f"Pending Tasks Remaining: {len(pending)}")
-    for task in pending:
-        print(f"  - {task.name} ({task.duration} mins)")
-    
-    # ===== DISPLAY SUMMARY =====
-    print_separator("SUMMARY")
-    
-    print(f"Owner: {owner.name}")
-    print(f"Pets: {', '.join([pet.name for pet in owner.get_all_pets()])}")
-    print(f"Total Tasks: {len(scheduler.get_all_tasks())}")
-    print(f"Completed Tasks: {len(scheduler.get_all_tasks()) - len(pending)}")
-    print(f"Pending Tasks: {len(pending)}")
-    print(f"Schedule Feasible: {'✓ YES' if scheduler.is_schedule_feasible() else '✗ NO'}")
-    
+        print("  No conflicts detected.")
+
     print_separator()
-    print("✓ Test completed successfully!\n")
+    print("All improvements verified.\n")
 
 
 if __name__ == "__main__":

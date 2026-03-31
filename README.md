@@ -22,6 +22,21 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## Smarter Scheduling
+
+The scheduler goes beyond a simple sorted list with several algorithmic improvements:
+
+- **Greedy time-cap** — `generate_schedule()` fills the day highest-priority first and stops when the owner's time budget is exhausted, guaranteeing the returned schedule always fits.
+- **Real start times** — the `Scheduler` accepts a `start_hour` so slots display as `08:00`, `08:30`, etc. instead of `00:00`.
+- **Multi-pet support** — multiple pets can be registered with one scheduler; tasks are linked to individual pets and filtered or reported per pet.
+- **Weekly frequency** — `needs_today(day_number)` supports `"daily"` and `"weekly"` tasks; weekly tasks only appear on Mondays.
+- **Schedule explanation** — `explain_schedule()` returns a plain-English reason for every task: whether it was chosen (priority + time remaining) or skipped (not enough budget).
+- **Completion rate** — `get_completion_rate()` returns the percentage of tasks finished so far.
+- **Sort by time** — `sort_by_time()` orders any task list chronologically using a lambda key on `"HH:MM"` strings.
+- **Filter tasks** — `filter_tasks(completed, pet_name)` returns tasks matching a completion status, a specific pet, or both combined.
+- **Recurring tasks** — `complete_task()` marks a task done, archives it to history, and auto-creates the next occurrence using `timedelta` (`+1 day` for daily, `+7 days` for weekly).
+- **Conflict detection** — `detect_conflicts()` scans all task pairs for overlapping time intervals and returns warning strings without ever raising an exception.
+
 ## Getting started
 
 ### Setup
